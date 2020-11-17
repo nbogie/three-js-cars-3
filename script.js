@@ -14,11 +14,12 @@ import { InputManager } from "./modules/InputManager.js";
 
 import { setupPostProcessingComposer } from "./modules/postProcessing.js";
 import { EffectComposer } from 'https://unpkg.com/three@0.122.0/examples/jsm/postprocessing/EffectComposer.js';
-
-
+import { setupPhysics } from "./modules/physics.js";
 
 
 let myCarData;
+
+
 
 
 
@@ -96,6 +97,95 @@ async function setupAsync() {
 
 
 
+  //a cube to show collisions
+  let myCubeMesh;
+  {
+    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    const material = new THREE.MeshLambertMaterial({ color: 0x00FF00 });
+    myCubeMesh = new THREE.Mesh(geometry, material);
+    scene.add(myCubeMesh);
+  }
+  //a sphere to show the sphereBody
+  let mySphereMesh;
+  {
+    const geometry = new THREE.SphereGeometry(1);
+    const material = new THREE.MeshLambertMaterial({ color: 0x5060FF, wireframe: true });
+
+    mySphereMesh = new THREE.Mesh(geometry, material);
+    mySphereMesh.visible = false;
+    scene.add(mySphereMesh);
+  }
+
+
+  const { world, cubeBody, sphereBody } = setupPhysics();
+
+
+  const gridHelper = new THREE.GridHelper(100, 20);
+  // scene.add(gridHelper);
+  const axesHelper = new THREE.AxesHelper(5);
+  // scene.add(axesHelper);
+
+
+  let drivingForceVisYel = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), sphereBody.position, 4, 0xffff00);
+  // scene.add(drivingForceVisYel);
+
+  function pushSphere(force) {
+    const centerInWorldCoords = sphereBody.pointToWorldFrame(new CANNON.Vec3());
+    sphereBody.applyImpulse(force, centerInWorldCoords);
+  }
+
+
+  function updatePhysics() {
+
+    const drivingForceFwd = new THREE.Vector3(0, 0, 10);
+    drivingForceFwd.applyAxisAngle(new THREE.Vector3(0, 1, 0), myCarData.heading);
+
+
+    //const drivingForceFwd = new CANNON.Vec3(0,-0.03,0);
+    if (inputManager.keys.up.down) {
+      pushSphere(drivingForceFwd);
+    }
+
+    if (inputManager.keys.down.down) {
+    }
+
+    // visualisations of driving drivingForceFwd
+    drivingForceVisYel.setDirection(drivingForceFwd);
+    drivingForceVisYel.position.copy(sphereBody.position);
+
+    // Step the physics world
+    const timeStep = 1 / 60;
+    world.step(timeStep);
+    // Copy coordinates from Cannon.js to Three.js
+    myCubeMesh.position.copy(cubeBody.position);
+    myCubeMesh.quaternion.copy(cubeBody.quaternion);
+
+    mySphereMesh.position.copy(sphereBody.position);
+    mySphereMesh.quaternion.copy(sphereBody.quaternion);
+  }
+
+
+  function resetSphereAndCar() {
+    sphereBody.position.set(1, 1, 0);
+    sphereBody.velocity.set(0, 0, 0);
+    sphereBody.angularVelocity.set(0, 0, 0);
+
+    myCarData.pos.set(0, 0, 0);
+    myCarData.vel.set(0, 0, 0);
+  }
+
+
+  function updateCar(car, sphereBody, timeS) {
+    car.pos.set(
+      sphereBody.position.x,
+      sphereBody.position.y - 1,
+      sphereBody.position.z
+    );
+    car.mesh.position.copy(car.pos);
+    car.mesh.rotation.y = car.heading;
+  }
+
+
 
   const canvas = document.querySelector('canvas');
   // The renderer: something that draws 3D objects onto the canvas
@@ -107,7 +197,6 @@ async function setupAsync() {
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0xaaaaaa, 1);
-
 
   let { composer, functions: postProcessingControls } = setupPostProcessingComposer(renderer, scene, camera);
 
@@ -130,15 +219,12 @@ async function setupAsync() {
       return;
     }
 
-    //  updateCarsInCircle(carsBigSet, time * 0.001, 10);
-    // console.log("in render", {myCarData});
 
-    updateCar(myCarData, timeS);
+    updateCar(myCarData, sphereBody, timeS);
+
     camera.position.lerp(desiredCameraPositionObj.getWorldPosition(new THREE.Vector3()), 0.05);
     camera.lookAt(myCarData.mesh.position);
     document.getElementById("info").innerText = `Time: ${(timeS).toFixed(1)}`;
-    //document.getElementById("info").innerText = JSON.stringify(myCarData, null, 2); //`Time: ${(time / 1000).toFixed(1)}`;
-    // throw new Error("stopping");
 
     const deltaTime = 0.1;
     const moveSpeed = 0.1;
@@ -147,14 +233,20 @@ async function setupAsync() {
     steerCar(myCarData, delta * 0.07);
     inputManager.keys.up.down && accelerate(myCarData, 0.01);
     inputManager.keys.down.down && brake(myCarData);
-    inputManager.keys.reset.down && resetCar(myCarData);
-    debugger
+
+    inputManager.keys.reset.down && resetSphereAndCar();
+    //inputManager.keys.reset.down && resetCar(myCarData);
+
     inputManager.keys.addRandomObject.justPressed && addRandomObjectAt(myCarData.mesh.position, props, scene);
 
     if (inputManager.keys.changeTexture.justPressed) {
       console.log("changing texture");
       changeTexture(myCarData.mesh);
     }
+    if (inputManager.keys.showSphere.justPressed) {
+      mySphereMesh.visible = !mySphereMesh.visible;
+    }
+
     if (inputManager.keys.randomiseCarMesh.down) {
       randomiseCarMesh(myCarData, carsBigSet);
       postProcessingControls.turnOn();
@@ -162,9 +254,8 @@ async function setupAsync() {
       desiredCameraPositionObj.parent = myCarData.mesh;
     }
 
-    //controls.target.copy(myCarData.pos);
-    //camera.position.set(myCarData.pos.x+10, myCarData.pos.y + 3, myCarData.pos.z - 10)
-    //controls.update();
+
+    updatePhysics();
 
     // Render the scene and the camera
     if (composer) {

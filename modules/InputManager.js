@@ -45,6 +45,7 @@ export class InputManager {
     addKey(82, 'reset'); // 82 is r
     addKey(77, 'randomiseCarMesh'); // 77 is m
     addKey(80, 'pause'); // 77 is m
+    addKey(83, 'showSphere'); // 83 is s
     addKey(84, 'changeTexture'); // 84 is t
     addKey(79, 'addRandomObject'); // 79 is o
 
