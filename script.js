@@ -151,13 +151,8 @@ async function setupAsync() {
     const drivingForceFwd = new THREE.Vector3(0, 0, 10);
     drivingForceFwd.applyAxisAngle(new THREE.Vector3(0, 1, 0), myCarData.heading);
 
-
-    //const drivingForceFwd = new CANNON.Vec3(0,-0.03,0);
     if (inputManager.keys.up.down) {
       pushSphere(drivingForceFwd);
-    }
-
-    if (inputManager.keys.down.down) {
     }
 
     // visualisations of driving drivingForceFwd
@@ -177,20 +172,16 @@ async function setupAsync() {
     physicsBoundMeshes.forEach(({ mesh, body }) => {
       mesh.position.copy(body.position);
       mesh.quaternion.copy(body.quaternion);
-
     });
   }
-
 
   function resetSphereAndCar() {
     sphereBody.position.set(1, 1, 0);
     sphereBody.velocity.set(0, 0, 0);
     sphereBody.angularVelocity.set(0, 0, 0);
-
     myCarData.pos.set(0, 0, 0);
     myCarData.vel.set(0, 0, 0);
   }
-
 
   function updateCar(car, sphereBody, timeS) {
     car.pos.set(
@@ -200,14 +191,11 @@ async function setupAsync() {
     );
     car.mesh.position.copy(car.pos);
     car.mesh.rotation.y = car.heading;
-    updateWheels(car.mesh, car.lastSteeringAmount * 0.1 * Math.PI, timeS);
 
+    updateWheels(car.mesh, car.lastSteeringAmount * 0.2 * Math.PI, timeS);
   }
 
-
-
   const canvas = document.querySelector('canvas');
-  // The renderer: something that draws 3D objects onto the canvas
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -238,23 +226,15 @@ async function setupAsync() {
       return;
     }
 
-
-    updateCar(myCarData, sphereBody, timeS);
-
     camera.position.lerp(desiredCameraPositionObj.getWorldPosition(new THREE.Vector3()), 0.05);
     camera.lookAt(myCarData.mesh.position);
     document.getElementById("info").innerText = `Time: ${(timeS).toFixed(1)}`;
 
-    const deltaTime = 0.1;
-    const moveSpeed = 0.1;
     const delta = (inputManager.keys.left.down ? 1 : 0) +
       (inputManager.keys.right.down ? -1 : 0);
     steerCar(myCarData, delta * 0.07);
-    inputManager.keys.up.down && accelerate(myCarData, 0.01);
-    inputManager.keys.down.down && brake(myCarData);
 
     inputManager.keys.reset.down && resetSphereAndCar();
-
 
     inputManager.keys.addRandomObject.justPressed && addRandomObjectBehindCar(myCarData, sphereBody, props, world, scene);
 
@@ -262,6 +242,7 @@ async function setupAsync() {
       console.log("changing texture");
       changeTexture(myCarData.mesh);
     }
+
     if (inputManager.keys.showSphere.justPressed) {
       mySphereMesh.visible = !mySphereMesh.visible;
     }
@@ -273,8 +254,8 @@ async function setupAsync() {
       desiredCameraPositionObj.parent = myCarData.mesh;
     }
 
-
     updatePhysics();
+    updateCar(myCarData, sphereBody, timeS);
 
     // Render the scene and the camera
     if (composer) {
