@@ -7,7 +7,7 @@ import { setupLights } from "./modules/lights.js";
 import { setupGround } from "./modules/ground.js";
 import { dumpObjectToConsoleAsString } from "./modules/debug.js";
 import { loadCarsAsyncFromSingleFile, loadRaceTrackAsync, loadPropsAsyncFromSingleFile } from "./modules/carLoader.js";
-import { updateCarsInCircle, steerCar, accelerate, brake, createCar, updateCar, resetCar, randomiseCarMesh } from "./modules/cars.js";
+import { steerCar, accelerate, brake, createCar, updateCar, updateWheels, randomiseCarMesh } from "./modules/cars.js";
 import { setupConnection } from "./modules/gameClient.js"
 import { pick } from "./modules/random.js";
 import { InputManager } from "./modules/InputManager.js";
@@ -183,6 +183,8 @@ async function setupAsync() {
     );
     car.mesh.position.copy(car.pos);
     car.mesh.rotation.y = car.heading;
+    updateWheels(car.mesh, car.lastSteeringAmount * 0.1 * Math.PI, timeS);
+
   }
 
 
@@ -235,7 +237,6 @@ async function setupAsync() {
     inputManager.keys.down.down && brake(myCarData);
 
     inputManager.keys.reset.down && resetSphereAndCar();
-    //inputManager.keys.reset.down && resetCar(myCarData);
 
     inputManager.keys.addRandomObject.justPressed && addRandomObjectAt(myCarData.mesh.position, props, scene);
 

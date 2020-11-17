@@ -9,10 +9,6 @@ export function createCar({ mesh, phase }) {
   const heading = 0;
   return { mesh, pos, vel, heading, phase, lastSteeringAmount };
 }
-export function resetCar(car) {
-  car.pos.set(0, 0, 0);
-  car.vel.set(0, 0, 0);
-}
 
 export function accelerate(car, mag) {
   const adjustedAngle = -car.heading + Math.PI / 2;
@@ -63,7 +59,7 @@ export function updateCarsInCircle(cars, timeS, radius) {
 
 
 
-function updateWheels(wheeledCar, steerAngle, timeS) {
+export function updateWheels(wheeledCar, steerAngle, timeS) {
   if (wheeledCar) {
     const wheels = wheeledCar.children.filter(c => c.name && c.name.startsWith("wheel"));
     const wheelsFront = wheeledCar.children.filter(c => c.name && c.name.startsWith("wheel_f"));
