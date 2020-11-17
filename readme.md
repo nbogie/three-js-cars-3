@@ -7,6 +7,8 @@ Not a game! just learning three.js and how to work with some models from blender
 - 'o' to place a random object
 - 't' to experimentally swap out the palette texture (not to a good one, yet! This will be used for headlights, colourising models, etc)
 
+"The car is a separate model that follows the sphere position. The user rotates the car, but not the sphere. The sphere gets a force in the direction of the car model." - Kenney https://twitter.com/Nitroneers/status/1238779466832363520
+
 ## TODO:
 
 - better shadow
