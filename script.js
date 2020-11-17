@@ -14,12 +14,12 @@ import { InputManager } from "./modules/InputManager.js";
 
 import { setupPostProcessingComposer } from "./modules/postProcessing.js";
 import { EffectComposer } from 'https://unpkg.com/three@0.122.0/examples/jsm/postprocessing/EffectComposer.js';
-import { setupPhysics } from "./modules/physics.js";
+import { setupPhysics, createCubeBody } from "./modules/physics.js";
 
 
 let myCarData;
 
-
+let physicsBoundMeshes = [];
 
 
 
@@ -34,15 +34,26 @@ function changeTexture(mesh) {
   //"https://images.pexels.com/photos/1089438/pexels-photo-1089438.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
 }
 
-function addRandomObjectAt(position, choices, scene) {
+function addRandomObjectBehindCar(myCarData, sphereBody, props, world, scene) {
+  const v = sphereBody.velocity;
+  const behindCar = myCarData.mesh.position.clone().sub(new THREE.Vector3(v.x, v.y, v.z).setLength(3)).add(new THREE.Vector3(0, 3, 0));
+  addRandomObjectAt(behindCar, props, world, scene);
+}
+
+
+function addRandomObjectAt(position, choices, world, scene) {
   console.assert(position, "position should not be null");
   console.assert(choices && choices.length > 0, "need some choices");
   const chosen = pick(choices);
   const newObj = chosen.clone();
   newObj.rotation.y = Math.random() * Math.PI * 2;
   newObj.position.copy(position);
+  //TODO: match centres of mesh and physics body - the pivot point of the modelled props is their base, not their centre.
+  const body = createCubeBody(world, newObj.position);
+  physicsBoundMeshes.push({ mesh: newObj, body: body });
   scene.add(newObj);
 }
+
 function setupCamera() {
   // The camera
   const camera = new THREE.PerspectiveCamera(
@@ -123,7 +134,7 @@ async function setupAsync() {
   const gridHelper = new THREE.GridHelper(100, 20);
   // scene.add(gridHelper);
   const axesHelper = new THREE.AxesHelper(5);
-  // scene.add(axesHelper);
+  scene.add(axesHelper);
 
 
   let drivingForceVisYel = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), sphereBody.position, 4, 0xffff00);
@@ -162,6 +173,12 @@ async function setupAsync() {
 
     mySphereMesh.position.copy(sphereBody.position);
     mySphereMesh.quaternion.copy(sphereBody.quaternion);
+
+    physicsBoundMeshes.forEach(({ mesh, body }) => {
+      mesh.position.copy(body.position);
+      mesh.quaternion.copy(body.quaternion);
+
+    });
   }
 
 
@@ -238,7 +255,8 @@ async function setupAsync() {
 
     inputManager.keys.reset.down && resetSphereAndCar();
 
-    inputManager.keys.addRandomObject.justPressed && addRandomObjectAt(myCarData.mesh.position, props, scene);
+
+    inputManager.keys.addRandomObject.justPressed && addRandomObjectBehindCar(myCarData, sphereBody, props, world, scene);
 
     if (inputManager.keys.changeTexture.justPressed) {
       console.log("changing texture");

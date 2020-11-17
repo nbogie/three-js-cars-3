@@ -5,7 +5,7 @@ export function setupPhysics() {
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
 
-    const cubeBody = createCubeBody(world);
+    const cubeBody = createCubeBody(world, new CANNON.Vec3(3, 5, 4));
     const sphereBody = createSphereBody(world);
     createGroundBody(world);
 
@@ -50,12 +50,11 @@ export function createGroundBody(world) {
 }
 
 
-export function createCubeBody(world) {
+export function createCubeBody(world, pos) {
     const cubeShape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
     const cubeBody = new CANNON.Body({ mass: 3 });
 
-    cubeBody.position.set(3, 5, 4);
-
+    cubeBody.position.set(pos.x, pos.y, pos.z);
 
     cubeBody.addShape(cubeShape);
     cubeBody.angularVelocity.set(0, 4, 0);
