@@ -4,36 +4,36 @@ import { GLTFLoader } from 'https://unpkg.com/three@0.122.0/examples/jsm/loaders
 
 import { setupShadows } from "./modules/shadows.js";
 import { setupLights } from "./modules/lights.js";
-import { setupGround }  from "./modules/ground.js";
-import { dumpObjectToConsoleAsString }  from "./modules/debug.js";
-import { loadCarsAsyncFromSingleFile, loadRaceTrackAsync, loadPropsAsyncFromSingleFile}  from "./modules/carLoader.js";
-import { updateCarsInCircle, steerCar, accelerate, brake, createCar, updateCar, resetCar, randomiseCarMesh }  from "./modules/cars.js";
-import { setupConnection} from "./modules/gameClient.js"
-import {pick} from "./modules/random.js";
-import {InputManager} from "./modules/InputManager.js";
+import { setupGround } from "./modules/ground.js";
+import { dumpObjectToConsoleAsString } from "./modules/debug.js";
+import { loadCarsAsyncFromSingleFile, loadRaceTrackAsync, loadPropsAsyncFromSingleFile } from "./modules/carLoader.js";
+import { updateCarsInCircle, steerCar, accelerate, brake, createCar, updateCar, resetCar, randomiseCarMesh } from "./modules/cars.js";
+import { setupConnection } from "./modules/gameClient.js"
+import { pick } from "./modules/random.js";
+import { InputManager } from "./modules/InputManager.js";
 
 import { setupPostProcessingComposer } from "./modules/postProcessing.js";
 import { EffectComposer } from 'https://unpkg.com/three@0.122.0/examples/jsm/postprocessing/EffectComposer.js';
 
 
-				
+
 
 let myCarData;
 
 
 
-function changeTexture(mesh){
+function changeTexture(mesh) {
   new THREE.TextureLoader().load(
     "./textures/sweetie-16-1x.png",
-  texture => {
-    //Update Texture
-    mesh.material.map = texture;
-    mesh.material.needsUpdate = true;
-  });
+    texture => {
+      //Update Texture
+      mesh.material.map = texture;
+      mesh.material.needsUpdate = true;
+    });
   //"https://images.pexels.com/photos/1089438/pexels-photo-1089438.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
 }
 
-function addRandomObjectAt(position, choices, scene){  
+function addRandomObjectAt(position, choices, scene) {
   console.assert(position, "position should not be null");
   console.assert(choices && choices.length > 0, "need some choices");
   const chosen = pick(choices);
@@ -43,17 +43,17 @@ function addRandomObjectAt(position, choices, scene){
   scene.add(newObj);
 }
 function setupCamera() {
-    // The camera
-    const camera = new THREE.PerspectiveCamera(
-        30,
-        window.innerWidth / window.innerHeight,
-        1,
-        10000
-    );
-    // Make the camera further from the models so we can see them better
-    camera.position.z = 15;
-    camera.position.y = 5;
-    return camera;
+  // The camera
+  const camera = new THREE.PerspectiveCamera(
+    30,
+    window.innerWidth / window.innerHeight,
+    1,
+    10000
+  );
+  // Make the camera further from the models so we can see them better
+  camera.position.z = 15;
+  camera.position.y = 5;
+  return camera;
 }
 
 async function setupAsync() {
@@ -62,7 +62,7 @@ async function setupAsync() {
   scene.background = new THREE.Color("hsl(190, 30%, 75%)");
   let isPaused = false;
 
-  
+
   const inputManager = new InputManager();
 
 
@@ -80,14 +80,14 @@ async function setupAsync() {
 
   const myCarData = pick(carsBigSet);
   // console.log({myCarData})
-  myCarData.pos.set(Math.random()*4, 0, Math.random()*4);
+  myCarData.pos.set(Math.random() * 4, 0, Math.random() * 4);
 
 
   const camera = setupCamera();
   // const controls = new OrbitControls(camera, renderer.domElement);
   // controls.target.set(0, 0, 0);
   // controls.update();
-  
+
   // Follow cam technique from nik lever
   // https://www.youtube.com/watch?v=lOMAu-XPs5I&list=PLFky-gauhF46LALXSriZcXLJjwtZLjehn&index=5&t=3m30s
   const desiredCameraPositionObj = new THREE.Object3D();
@@ -101,7 +101,7 @@ async function setupAsync() {
   // The renderer: something that draws 3D objects onto the canvas
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true, 
+    antialias: true,
     // alpha: true,
     // premultipliedAlpha: false,
   });
@@ -109,74 +109,74 @@ async function setupAsync() {
   renderer.setClearColor(0xaaaaaa, 1);
 
 
-  let {composer, functions:postProcessingControls} = setupPostProcessingComposer(renderer, scene, camera);
-  
+  let { composer, functions: postProcessingControls } = setupPostProcessingComposer(renderer, scene, camera);
+
   setupShadows(scene, renderer);
   setupLights(scene);
 
-  
+
   //setupConnection(myCarData);
-  function togglePause(){
+  function togglePause() {
     console.log("toggling pause")
     isPaused = !isPaused;
   }
   function render(timeMs) {
-     const timeS = timeMs / 1000;
+    const timeS = timeMs / 1000;
 
     inputManager.keys.pause.justPressed && togglePause();
-    if (isPaused){
+    if (isPaused) {
       inputManager.updateAtEndOfFrame();
       requestAnimationFrame(render);
       return;
     }
 
-  //  updateCarsInCircle(carsBigSet, time * 0.001, 10);
-      // console.log("in render", {myCarData});
-    
-      updateCar(myCarData, timeS);
-      camera.position.lerp(desiredCameraPositionObj.getWorldPosition(new THREE.Vector3()), 0.05);
-      camera.lookAt(myCarData.mesh.position);
-      document.getElementById("info").innerText = `Time: ${(timeS).toFixed(1)}`;
-      //document.getElementById("info").innerText = JSON.stringify(myCarData, null, 2); //`Time: ${(time / 1000).toFixed(1)}`;
-      // throw new Error("stopping");
+    //  updateCarsInCircle(carsBigSet, time * 0.001, 10);
+    // console.log("in render", {myCarData});
 
-      const deltaTime = 0.1;
-      const moveSpeed = 0.1;    
-      const delta = (inputManager.keys.left.down  ?  1 : 0) +
-                    (inputManager.keys.right.down ? -1 : 0);
-      steerCar(myCarData, delta * 0.07);              
-      inputManager.keys.up.down && accelerate(myCarData, 0.01);
-      inputManager.keys.down.down && brake(myCarData);
-      inputManager.keys.reset.down && resetCar(myCarData);
-      debugger
-      inputManager.keys.addRandomObject.justPressed && addRandomObjectAt(myCarData.mesh.position, props, scene);
-    
-      if (inputManager.keys.changeTexture.justPressed){
-       console.log("changing texture");
-        changeTexture(myCarData.mesh);
-      }
-      if (inputManager.keys.randomiseCarMesh.down){
-        randomiseCarMesh(myCarData, carsBigSet);
-        postProcessingControls.turnOn();
-        setTimeout(()=>postProcessingControls.turnOff(), 200);
-        desiredCameraPositionObj.parent = myCarData.mesh;
-      }
-      
-      //controls.target.copy(myCarData.pos);
-      //camera.position.set(myCarData.pos.x+10, myCarData.pos.y + 3, myCarData.pos.z - 10)
-      //controls.update();
+    updateCar(myCarData, timeS);
+    camera.position.lerp(desiredCameraPositionObj.getWorldPosition(new THREE.Vector3()), 0.05);
+    camera.lookAt(myCarData.mesh.position);
+    document.getElementById("info").innerText = `Time: ${(timeS).toFixed(1)}`;
+    //document.getElementById("info").innerText = JSON.stringify(myCarData, null, 2); //`Time: ${(time / 1000).toFixed(1)}`;
+    // throw new Error("stopping");
 
-      // Render the scene and the camera
-      if (composer){
-        composer.render();
-      } else {
-        renderer.render(scene, camera);
-      }
+    const deltaTime = 0.1;
+    const moveSpeed = 0.1;
+    const delta = (inputManager.keys.left.down ? 1 : 0) +
+      (inputManager.keys.right.down ? -1 : 0);
+    steerCar(myCarData, delta * 0.07);
+    inputManager.keys.up.down && accelerate(myCarData, 0.01);
+    inputManager.keys.down.down && brake(myCarData);
+    inputManager.keys.reset.down && resetCar(myCarData);
+    debugger
+    inputManager.keys.addRandomObject.justPressed && addRandomObjectAt(myCarData.mesh.position, props, scene);
 
-      inputManager.updateAtEndOfFrame();
-      // Make it call the render() function about every 1/60 second
-      //always call this last so we stop on an error in the above.
-      requestAnimationFrame(render);
+    if (inputManager.keys.changeTexture.justPressed) {
+      console.log("changing texture");
+      changeTexture(myCarData.mesh);
+    }
+    if (inputManager.keys.randomiseCarMesh.down) {
+      randomiseCarMesh(myCarData, carsBigSet);
+      postProcessingControls.turnOn();
+      setTimeout(() => postProcessingControls.turnOff(), 200);
+      desiredCameraPositionObj.parent = myCarData.mesh;
+    }
+
+    //controls.target.copy(myCarData.pos);
+    //camera.position.set(myCarData.pos.x+10, myCarData.pos.y + 3, myCarData.pos.z - 10)
+    //controls.update();
+
+    // Render the scene and the camera
+    if (composer) {
+      composer.render();
+    } else {
+      renderer.render(scene, camera);
+    }
+
+    inputManager.updateAtEndOfFrame();
+    // Make it call the render() function about every 1/60 second
+    //always call this last so we stop on an error in the above.
+    requestAnimationFrame(render);
   }
 
   render();

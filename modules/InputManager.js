@@ -16,18 +16,18 @@ export class InputManager {
   constructor() {
     this.keys = {};
     const keyMap = new Map();
- 
+
     const setKey = (keyName, pressed) => {
       const keyState = this.keys[keyName];
       keyState.justPressed = pressed && !keyState.down;
       keyState.down = pressed;
     };
- 
+
     const addKey = (keyCode, name) => {
       this.keys[name] = { down: false, justPressed: false };
       keyMap.set(keyCode, name);
     };
- 
+
     const setKeyFromKeyCode = (keyCode, pressed) => {
       const keyName = keyMap.get(keyCode);
       if (!keyName) {
@@ -35,7 +35,7 @@ export class InputManager {
       }
       setKey(keyName, pressed);
     };
- 
+
     addKey(37, 'left');
     addKey(39, 'right');
     addKey(38, 'up');
@@ -47,7 +47,7 @@ export class InputManager {
     addKey(80, 'pause'); // 77 is m
     addKey(84, 'changeTexture'); // 84 is t
     addKey(79, 'addRandomObject'); // 79 is o
- 
+
 
     window.addEventListener('keydown', (e) => {
       //e.preventDefault();

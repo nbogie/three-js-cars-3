@@ -1,6 +1,6 @@
 import * as THREE from 'https://unpkg.com/three@0.122.0/build/three.module.js';
 
-export function setupShadows(scene, renderer){
+export function setupShadows(scene, renderer) {
 
   scene.traverse((obj) => {
     if (obj.castShadow !== undefined) {
@@ -16,7 +16,7 @@ export function setupShadows(scene, renderer){
     light.castShadow = true;
     light.position.set(-250, 800, -850);
     light.target.position.set(-550, 40, -450);
-  
+
     light.shadow.bias = -0.004;
     light.shadow.mapSize.width = 2048;
     light.shadow.mapSize.height = 2048;

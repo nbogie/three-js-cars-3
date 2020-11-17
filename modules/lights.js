@@ -13,7 +13,7 @@ export function setupLights(scene) {
   dirLight2.castShadow = true;
   scene.add(dirLight2);
 
-  const ambientLight = new THREE.AmbientLight(0xdc8874, .5);
+  const ambientLight = new THREE.AmbientLight(0xdc8874, .2);
   scene.add(ambientLight);
 
 }
